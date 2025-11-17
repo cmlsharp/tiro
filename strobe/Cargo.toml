@@ -1,0 +1,17 @@
+[package]
+name = "strobe"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+keccak = "0.1.5"
+zeroize = { version = "1.8.2", features = ["simd"]}
+bitflags = "2.10.0"
+cnti = {git = "https://github.com/cmlsharp/cnti", optional=true}
+
+[features]
+default = []
+mac = ["dep:cnti"]
+
+
+

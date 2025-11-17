@@ -1,0 +1,106 @@
+   0.054572142s  INFO prepare_target{force=false package_id=tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro) target="tiro"}: cargo::core::compiler::fingerprint: stale: changed "/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive/src/lib.rs"
+   0.054584482s  INFO prepare_target{force=false package_id=tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro) target="tiro"}: cargo::core::compiler::fingerprint:           (vs) "/home/chad/Documents/code/fiat_shamir_stuff/tiro/target/debug/.fingerprint/tiro-derive-a121e16f71c5a1f1/dep-lib-tiro_derive"
+   0.054586742s  INFO prepare_target{force=false package_id=tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro) target="tiro"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 1762273549, nanos: 215277420 } < FileTime { seconds: 1762273573, nanos: 311188971 }
+   0.054649590s  INFO prepare_target{force=false package_id=tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro) target="tiro"}: cargo::core::compiler::fingerprint: fingerprint error for tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro)/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("tiro", ["lib"], "/home/chad/Documents/code/fiat_shamir_stuff/tiro/src/lib.rs", Edition2024) }
+   0.054657645s  INFO prepare_target{force=false package_id=tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro) target="tiro"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/chad/Documents/code/fiat_shamir_stuff/tiro/target/debug/.fingerprint/tiro-78abc09048783c5f/lib-tiro`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: cargo_util::paths::read_bytes
+   1: cargo_util::paths::read
+   2: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   3: cargo::core::compiler::fingerprint::prepare_target
+   4: cargo::core::compiler::compile
+   5: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   6: cargo::ops::cargo_compile::compile_ws
+   7: cargo::ops::cargo_compile::compile_with_exec
+   8: cargo::ops::cargo_compile::compile
+   9: cargo::commands::check::exec
+  10: <cargo::cli::Exec>::exec
+  11: cargo::main
+  12: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  13: std::rt::lang_start::<()>::{closure#0}
+  14: core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/core/src/ops/function.rs:287:21
+  15: std::panicking::catch_unwind::do_call
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panicking.rs:590:40
+  16: std::panicking::catch_unwind
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panicking.rs:553:19
+  17: std::panic::catch_unwind
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panic.rs:359:14
+  18: std::rt::lang_start_internal::{{closure}}
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/rt.rs:175:24
+  19: std::panicking::catch_unwind::do_call
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panicking.rs:590:40
+  20: std::panicking::catch_unwind
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panicking.rs:553:19
+  21: std::panic::catch_unwind
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panic.rs:359:14
+  22: std::rt::lang_start_internal
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/rt.rs:171:5
+  23: main
+  24: <unknown>
+  25: __libc_start_main
+  26: <unknown>
+   0.059917110s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint: fingerprint dirty for tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive)/Build/TargetInner { name_inferred: true, for_host: true, proc_macro: true, ..: lib_target("tiro_derive", ["proc-macro"], "/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive/src/lib.rs", Edition2024) }
+   0.059927866s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "/home/chad/Documents/code/fiat_shamir_stuff/tiro/target/debug/.fingerprint/tiro-derive-a121e16f71c5a1f1/dep-lib-tiro_derive", reference_mtime: FileTime { seconds: 1762273549, nanos: 215277420 }, stale: "/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive/src/lib.rs", stale_mtime: FileTime { seconds: 1762273573, nanos: 311188971 } }))
+   0.060864886s  INFO prepare_target{force=false package_id=tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro) target="tiro"}: cargo::core::compiler::fingerprint: fingerprint error for tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("tiro", ["lib"], "/home/chad/Documents/code/fiat_shamir_stuff/tiro/src/lib.rs", Edition2024) }
+   0.060873756s  INFO prepare_target{force=false package_id=tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro) target="tiro"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/chad/Documents/code/fiat_shamir_stuff/tiro/target/debug/.fingerprint/tiro-a54c9c3d3f66d510/test-lib-tiro`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: cargo_util::paths::read_bytes
+   1: cargo_util::paths::read
+   2: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   3: cargo::core::compiler::fingerprint::prepare_target
+   4: cargo::core::compiler::compile
+   5: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   6: cargo::ops::cargo_compile::compile_ws
+   7: cargo::ops::cargo_compile::compile_with_exec
+   8: cargo::ops::cargo_compile::compile
+   9: cargo::commands::check::exec
+  10: <cargo::cli::Exec>::exec
+  11: cargo::main
+  12: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  13: std::rt::lang_start::<()>::{closure#0}
+  14: core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/core/src/ops/function.rs:287:21
+  15: std::panicking::catch_unwind::do_call
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panicking.rs:590:40
+  16: std::panicking::catch_unwind
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panicking.rs:553:19
+  17: std::panic::catch_unwind
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panic.rs:359:14
+  18: std::rt::lang_start_internal::{{closure}}
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/rt.rs:175:24
+  19: std::panicking::catch_unwind::do_call
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panicking.rs:590:40
+  20: std::panicking::catch_unwind
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panicking.rs:553:19
+  21: std::panic::catch_unwind
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/panic.rs:359:14
+  22: std::rt::lang_start_internal
+             at /rustc/292be5c7c05138d753bbd4b30db7a3f1a5c914f7/library/std/src/rt.rs:171:5
+  23: main
+  24: <unknown>
+  25: __libc_start_main
+  26: <unknown>
+   0.062303966s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint: stale: changed "/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive/src/lib.rs"
+   0.062309464s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint:           (vs) "/home/chad/Documents/code/fiat_shamir_stuff/tiro/target/debug/.fingerprint/tiro-derive-72e1ee449d7737bf/dep-lib-tiro_derive"
+   0.062311438s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 1762273549, nanos: 215277420 } < FileTime { seconds: 1762273573, nanos: 311188971 }
+   0.062335535s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint: fingerprint dirty for tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive)/Check { test: false }/TargetInner { name_inferred: true, for_host: true, proc_macro: true, ..: lib_target("tiro_derive", ["proc-macro"], "/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive/src/lib.rs", Edition2024) }
+   0.062343607s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "/home/chad/Documents/code/fiat_shamir_stuff/tiro/target/debug/.fingerprint/tiro-derive-72e1ee449d7737bf/dep-lib-tiro_derive", reference_mtime: FileTime { seconds: 1762273549, nanos: 215277420 }, stale: "/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive/src/lib.rs", stale_mtime: FileTime { seconds: 1762273573, nanos: 311188971 } }))
+   0.062880333s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint: stale: changed "/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive/src/lib.rs"
+   0.062884468s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint:           (vs) "/home/chad/Documents/code/fiat_shamir_stuff/tiro/target/debug/.fingerprint/tiro-derive-e6df45f3f8039a44/dep-test-lib-tiro_derive"
+   0.062886342s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 1762273549, nanos: 215459141 } < FileTime { seconds: 1762273573, nanos: 311188971 }
+   0.062899760s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint: fingerprint dirty for tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive)/Check { test: true }/TargetInner { name_inferred: true, for_host: true, proc_macro: true, ..: lib_target("tiro_derive", ["proc-macro"], "/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive/src/lib.rs", Edition2024) }
+   0.062905599s  INFO prepare_target{force=false package_id=tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive) target="tiro_derive"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "/home/chad/Documents/code/fiat_shamir_stuff/tiro/target/debug/.fingerprint/tiro-derive-e6df45f3f8039a44/dep-test-lib-tiro_derive", reference_mtime: FileTime { seconds: 1762273549, nanos: 215459141 }, stale: "/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive/src/lib.rs", stale_mtime: FileTime { seconds: 1762273573, nanos: 311188971 } }))
+   Compiling tiro-derive v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro/tiro-derive)
+    Checking tiro v0.1.0 (/home/chad/Documents/code/fiat_shamir_stuff/tiro)
+error: could not compile `tiro` (lib) due to 2 previous errors; 6 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `tiro` (lib test) due to 4 previous errors; 6 warnings emitted

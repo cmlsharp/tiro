@@ -1,0 +1,29 @@
+[package]
+name = "tiro"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# to do replace this with the real crate once my PR is merged 
+bcs = {git = "https://github.com/cmlsharp/bcs"}
+hybrid-array = {version = "0.4.5", default-features = false}
+serde = {version = "1.0.228", features = ["std"]}
+tiro-derive = {path = "./tiro-derive", optional = true}
+strobe = {path = "./strobe"}
+rand_core = "0.9.3"
+
+[features]
+default = ["derive"]
+derive = ["dep:tiro-derive"]
+
+[workspace]
+resolver = "3"
+members = [".", "tiro-derive", "strobe"]
+
+[dev-dependencies]
+crypto-bigint = "0.6.1"
+serde = {version = "1.0.228", features = ["std", "derive"]}
+num-bigint = { version = "0.4.6", features = ["rand", "serde"] }
+num-traits = "0.2.19"
+rand = "0.8"
+
