@@ -17,17 +17,6 @@ pub trait RoundSpec {
     type Challenge: FromByteRepr;
 }
 
-//
-// decree! {
-//     struct MyProtocol;
-//
-//
-// }
-//
-//
-
-pub struct ProtocolEnd;
-
 pub enum InputPhase {}
 pub enum ChallengePhase {}
 pub enum ExtendPhase {}
