@@ -11,90 +11,105 @@ use from_bytes::FromByteRepr;
 #[cfg(feature = "derive")]
 pub use tiro_derive::FromByteRepr;
 
-pub trait RoundSpec {
-    const LABEL: &str;
-    type Input: serde::Serialize;
+pub trait Interaction {
+    type Message: serde::Serialize;
     type Challenge: FromByteRepr;
+    type Next;
 }
+
+pub trait ProtocolStart: Interaction {
+    const NAME: &str;
+    type Statement: serde::Serialize;
+}
+
+pub enum ProtocolEnd {}
 
 pub enum InputPhase {}
 pub enum ChallengePhase {}
-pub enum ExtendPhase {}
 
 #[must_use]
 pub struct Transcript<Spec, State> {
     transcript: RawTranscript,
+    round: u32,
     _state: PhantomData<(State, Spec)>,
 }
 
 #[derive(Debug, Clone)]
-pub struct SerializationError {
-    inner: bcs::Error,
-}
+pub struct SerializationError(bcs::Error);
 
 impl core::fmt::Display for SerializationError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self.inner)
+        write!(f, "{}", self.0)
     }
 }
 
 impl core::error::Error for SerializationError {
     fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
-        Some(&self.inner)
+        Some(&self.0)
     }
 }
 
 impl<Spec, State> Transcript<Spec, State> {
-    fn from_raw(transcript: RawTranscript) -> Self {
+    fn from_raw(transcript: RawTranscript, round: u32) -> Self {
         Self {
             transcript,
+            round,
             _state: PhantomData,
         }
     }
 
     fn new_type_state<Spec2, State2>(self) -> Transcript<Spec2, State2> {
-        Transcript::from_raw(self.transcript)
+        Transcript::from_raw(self.transcript, self.round)
     }
 }
 
-impl<S: RoundSpec> Transcript<S, InputPhase> {
-    pub fn new(label: &[u8], statement: impl serde::Serialize) -> Self {
-        let mut raw = RawTranscript::new(label);
+impl<S: Interaction> Transcript<S, InputPhase> {
+    pub fn new(label: &str, statement: &S::Statement) -> Self
+    where
+        S: ProtocolStart,
+    {
+        let mut raw = RawTranscript::new(S::NAME.as_bytes());
         raw.append_message(
-            b"stmt",
+            label.as_bytes(),
             &bcs::to_bytes(&statement).expect("statement is serializable"),
         );
-        Self::from_raw(raw)
+        Self::from_raw(raw, 0)
     }
 
-    pub fn try_input(
+    // I'm not sure serialization failure should really be a programmer-recoverable error
+    // but just in case...
+    pub fn try_message(
         mut self,
-        input: &S::Input,
+        input: &S::Message,
     ) -> Result<Transcript<S, ChallengePhase>, SerializationError> {
-        let bytes = bcs::to_bytes(input).map_err(|e| SerializationError { inner: e })?;
-        self.transcript.append_message(S::LABEL.as_bytes(), &bytes);
+        let bytes = bcs::to_bytes(input).map_err(SerializationError)?;
+        let round_bytes = (self.round * 2).to_le_bytes();
+        self.transcript.append_message(&round_bytes, &bytes);
         Ok(self.new_type_state())
     }
 
-    pub fn input(self, input: &S::Input) -> Transcript<S, ChallengePhase> {
-        self.try_input(input)
-            .expect("serialization of input is successful")
+    pub fn message(self, input: &S::Message) -> Transcript<S, ChallengePhase> {
+        self.try_message(input)
+            .expect("input serializes successfully");
     }
 }
 
-impl<S: RoundSpec> Transcript<S, ChallengePhase> {
-    pub fn challenge(mut self) -> (Transcript<S, ExtendPhase>, S::Challenge) {
+impl<S: Interaction> Transcript<S, ChallengePhase> {
+    pub fn challenge(mut self) -> (Transcript<S::Next, InputPhase>, S::Challenge) {
         let mut chall_buf = Array::default();
+        let round_bytes = (self.round * 2 + 1).to_le_bytes();
         self.transcript
-            .challenge_bytes(S::LABEL.as_bytes(), &mut chall_buf);
+            .challenge_bytes(&round_bytes, &mut chall_buf);
 
-        (self.new_type_state(), FromByteRepr::from_bytes(&chall_buf))
-    }
-}
-
-impl<D: RoundSpec> Transcript<ExtendPhase, D> {
-    pub fn extend<D2: RoundSpec>(self) -> Transcript<InputPhase, D2> {
-        self.new_type_state()
+        (
+            Transcript::from_raw(
+                self.transcript,
+                // this should really never happen
+                // this would require a protocol with 2**32 rounds
+                self.round.checked_add(1).expect("num rounds < 2**32"),
+            ),
+            FromByteRepr::from_bytes(&chall_buf),
+        )
     }
 }
 
@@ -121,10 +136,15 @@ mod test {
 
         struct Schnorr;
 
-        impl RoundSpec for Schnorr {
-            const LABEL: &str = "Schnorr1";
-            type Input = SchnorrMessage;
+        impl ProtocolStart for Schnorr {
+            const NAME: &str = "Schnorr";
+            type Statement = SchnorrStatement;
+        }
+
+        impl Interaction for Schnorr {
+            type Message = SchnorrMessage;
             type Challenge = SchnorrChallenge;
+            type Next = ProtocolEnd;
         }
 
         let target = BigInt::from(8675309u32);
@@ -142,9 +162,9 @@ mod test {
             modulus,
         };
 
-        let transcript = Transcript::<Schnorr, _>::new(b"my_protocol", statement);
+        let transcript = Transcript::<Schnorr, _>::new("schnorr1", &statement);
 
-        let (_, challenge) = transcript.input(&message).challenge();
+        let (_, challenge) = transcript.message(&message).challenge();
 
         let challenge_int = BigInt::from_bytes_le(Sign::Plus, &challenge);
         let _z = (challenge_int * log) + r;
@@ -181,10 +201,15 @@ mod test {
 
         struct Girault;
 
-        impl RoundSpec for Girault {
-            const LABEL: &str = "Girault";
-            type Input = GiraultMessage;
+        impl ProtocolStart for Girault {
+            const NAME: &str = "Girault";
+            type Statement = GiraultStatement;
+        }
+
+        impl Interaction for Girault {
+            type Message = GiraultMessage;
             type Challenge = GiraultChallenge;
+            type Next = ProtocolEnd;
         }
 
         fn prove_girault(
@@ -194,8 +219,8 @@ mod test {
             let r = rand::thread_rng().gen_biguint(1024);
             let commit = stmt.base.modpow(&r, &stmt.modulus);
             let message = GiraultMessage { commit };
-            let (_, chall) = Transcript::<Girault, _>::new(b"girault", stmt)
-                .input(&message)
+            let (_, chall) = Transcript::<Girault, _>::new("girault", stmt)
+                .message(&message)
                 .challenge();
             let z = r + (x * &chall.0);
             (message, chall, z)
@@ -211,8 +236,8 @@ mod test {
             assert!(!stmt.target.is_one() && !stmt.target.is_zero());
             assert!(!stmt.base.is_one() && !stmt.base.is_zero());
             assert!(!z.is_one() && !z.is_zero());
-            let transcript_verify = Transcript::<Girault, _>::new(b"girault", &stmt);
-            let (_, verifier_challenge) = transcript_verify.input(&msg).challenge();
+            let transcript_verify = Transcript::<Girault, _>::new("girault", &stmt);
+            let (_, verifier_challenge) = transcript_verify.message(&msg).challenge();
 
             assert_eq!(verifier_challenge, challenge);
             let check = (stmt.base.modpow(&z, &stmt.modulus)
