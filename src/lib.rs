@@ -30,7 +30,9 @@ pub trait ProtocolStart: Interaction {
 // A sentinel for no further interactions
 pub enum ProtocolEnd {}
 
-pub enum InputPhase {}
+/// Phantom type indicating a Transcrpit is ready to recieve a prover Message
+pub enum MessagePhase {}
+/// Phantom type indicating a Transcript is ready to produce a challenge
 pub enum ChallengePhase {}
 
 #[must_use]
@@ -55,11 +57,8 @@ impl<Inter, State> Transcript<Inter, State> {
     }
 }
 
-impl<S: Interaction> Transcript<S, InputPhase> {
-    pub fn new(label: &str, statement: &S::Statement) -> Self
-    where
-        S: ProtocolStart,
-    {
+impl<S: ProtocolStart> Transcript<S, MessagePhase> {
+    pub fn new(label: &str, statement: &S::Statement) -> Self {
         let mut raw = RawTranscript::new(S::NAME.as_bytes());
         raw.append_message(
             label.as_bytes(),
@@ -67,7 +66,9 @@ impl<S: Interaction> Transcript<S, InputPhase> {
         );
         Self::from_raw(raw, 0)
     }
+}
 
+impl<S: Interaction> Transcript<S, MessagePhase> {
     // I'm not sure serialization failure should really be a programmer-recoverable error
     // but just in case...
     pub fn try_message(
@@ -89,7 +90,7 @@ impl<S: Interaction> Transcript<S, InputPhase> {
 }
 
 impl<S: Interaction> Transcript<S, ChallengePhase> {
-    pub fn challenge(mut self) -> (Transcript<S::Next, InputPhase>, S::Challenge) {
+    pub fn challenge(mut self) -> (Transcript<S::Next, MessagePhase>, S::Challenge) {
         let mut chall_buf = Array::default();
         let round_bytes = (self.round * 2 + 1).to_le_bytes();
         self.transcript
