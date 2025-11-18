@@ -128,60 +128,9 @@ impl core::error::Error for SerializationError {
 #[cfg(test)]
 mod test {
     use super::*;
-    use core::str::FromStr;
     use hybrid_array::typenum;
-    use num_bigint::{BigInt, RandBigInt, Sign};
-    use num_traits::Signed;
+    use num_bigint::RandBigInt;
     use serde::Serialize;
-    #[test]
-    fn schnorr() -> Result<(), SerializationError> {
-        #[derive(Serialize)]
-        struct SchnorrStatement {
-            modulus: BigInt,
-            base: BigInt,
-            target: BigInt,
-        }
-
-        type SchnorrMessage = BigInt;
-
-        type SchnorrChallenge = [u8; 16];
-
-        struct Schnorr;
-
-        impl ProtocolStart for Schnorr {
-            const NAME: &str = "Schnorr";
-            type Statement = SchnorrStatement;
-        }
-
-        impl Interaction for Schnorr {
-            type Message = SchnorrMessage;
-            type Challenge = SchnorrChallenge;
-            type Next = ProtocolEnd;
-        }
-
-        let target = BigInt::from(8675309u32);
-        let base = BigInt::from(43u32);
-        let modulus = &BigInt::from(2u32).pow(127) - BigInt::from(1u32);
-        let mut rng = rand::thread_rng();
-        let r = rng.gen_bigint(128).abs();
-        let log = BigInt::from_str("18777797083714995725967614997933308615").unwrap();
-
-        let message = base.modpow(&r, &modulus);
-
-        let statement = SchnorrStatement {
-            target,
-            base,
-            modulus,
-        };
-
-        let transcript = Transcript::<Schnorr, _>::new("schnorr1", &statement);
-
-        let (_, challenge) = transcript.message(&message).challenge();
-
-        let challenge_int = BigInt::from_bytes_le(Sign::Plus, &challenge);
-        let _z = (challenge_int * log) + r;
-        Ok(())
-    }
 
     use num_bigint::BigUint;
     use num_traits::{One, Zero};
@@ -254,7 +203,7 @@ mod test {
             let check = (stmt.base.modpow(&z, &stmt.modulus)
                 * stmt.target.modpow(&challenge.0, &stmt.modulus))
                 % stmt.modulus;
-            assert_eq!(check, msg.commit);
+            assert_eq!(check, msg.0);
         }
 
         // x is our secret logarithm
