@@ -138,6 +138,7 @@ mod test {
     // interface old decree had with incremental initialization, but in a type-safe way;
     #[test]
     fn test_girault() {
+        // Just a type-level label for the Girault protocol
         struct Girault;
 
         #[derive(Serialize)]
@@ -148,7 +149,7 @@ mod test {
         }
 
         #[derive(Serialize)]
-        struct GiraultMessage(BigUint);
+        struct GiraultCommit(BigUint);
 
         #[derive(Debug, PartialEq)]
         // In reality you'd probably already have a Field elem type for your field
@@ -167,7 +168,7 @@ mod test {
         }
 
         impl Interaction for Girault {
-            type Message = GiraultMessage;
+            type Message = GiraultCommit;
             type Challenge = GiraultChallenge;
             type Next = ProtocolEnd;
         }
@@ -175,10 +176,10 @@ mod test {
         fn prove_girault(
             x: BigUint,
             stmt: &GiraultStatement,
-        ) -> (GiraultMessage, GiraultChallenge, BigUint) {
+        ) -> (GiraultCommit, GiraultChallenge, BigUint) {
             let r = rand::thread_rng().gen_biguint(1024);
             let commit = stmt.base.modpow(&r, &stmt.modulus);
-            let message = GiraultMessage(commit);
+            let message = GiraultCommit(commit);
             let (_, chall) = Transcript::<Girault, _>::new("girault", stmt)
                 .message(&message)
                 .challenge();
@@ -188,22 +189,22 @@ mod test {
 
         fn verify_girault(
             stmt: GiraultStatement,
-            msg: GiraultMessage,
+            commit: GiraultCommit,
             challenge: GiraultChallenge,
             z: BigUint,
         ) {
-            assert!(!msg.0.is_one() && !msg.0.is_zero());
+            assert!(!commit.0.is_one() && !commit.0.is_zero());
             assert!(!stmt.target.is_one() && !stmt.target.is_zero());
             assert!(!stmt.base.is_one() && !stmt.base.is_zero());
             assert!(!z.is_one() && !z.is_zero());
             let transcript_verify = Transcript::<Girault, _>::new("girault", &stmt);
-            let (_, verifier_challenge) = transcript_verify.message(&msg).challenge();
+            let (_, verifier_challenge) = transcript_verify.message(&commit).challenge();
 
             assert_eq!(verifier_challenge, challenge);
             let check = (stmt.base.modpow(&z, &stmt.modulus)
                 * stmt.target.modpow(&challenge.0, &stmt.modulus))
                 % stmt.modulus;
-            assert_eq!(check, msg.0);
+            assert_eq!(check, commit.0);
         }
 
         // x is our secret logarithm
