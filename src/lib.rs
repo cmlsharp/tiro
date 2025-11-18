@@ -11,45 +11,37 @@ use from_bytes::FromByteRepr;
 #[cfg(feature = "derive")]
 pub use tiro_derive::FromByteRepr;
 
+// Represents a Prover-Verifier interaction
 pub trait Interaction {
     type Message: serde::Serialize;
     type Challenge: FromByteRepr;
+    // Some protocols have multiple interactions
+    // 'Next' can either be another Interaction or ProtocolEnd
     type Next;
 }
 
+// Implemented for the first interaction
+// Gives the protocol a name and a statement type
 pub trait ProtocolStart: Interaction {
     const NAME: &str;
     type Statement: serde::Serialize;
 }
 
+// A sentinel for no further interactions
 pub enum ProtocolEnd {}
 
 pub enum InputPhase {}
 pub enum ChallengePhase {}
 
 #[must_use]
-pub struct Transcript<Spec, State> {
+pub struct Transcript<Inter, State> {
     transcript: RawTranscript,
     round: u32,
-    _state: PhantomData<(State, Spec)>,
+    _state: PhantomData<(Inter, State)>,
 }
 
-#[derive(Debug, Clone)]
-pub struct SerializationError(bcs::Error);
-
-impl core::fmt::Display for SerializationError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl core::error::Error for SerializationError {
-    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
-        Some(&self.0)
-    }
-}
-
-impl<Spec, State> Transcript<Spec, State> {
+// Internal constructors for Transcript
+impl<Inter, State> Transcript<Inter, State> {
     fn from_raw(transcript: RawTranscript, round: u32) -> Self {
         Self {
             transcript,
@@ -58,7 +50,7 @@ impl<Spec, State> Transcript<Spec, State> {
         }
     }
 
-    fn new_type_state<Spec2, State2>(self) -> Transcript<Spec2, State2> {
+    fn new_type_state<Inter2, State2>(self) -> Transcript<Inter2, State2> {
         Transcript::from_raw(self.transcript, self.round)
     }
 }
@@ -83,6 +75,8 @@ impl<S: Interaction> Transcript<S, InputPhase> {
         input: &S::Message,
     ) -> Result<Transcript<S, ChallengePhase>, SerializationError> {
         let bytes = bcs::to_bytes(input).map_err(SerializationError)?;
+        // domain separation between messages and challenges is actually already handled by
+        // RawTranscript. But we need to supply some label, and more separation can't hurt
         let round_bytes = (self.round * 2).to_le_bytes();
         self.transcript.append_message(&round_bytes, &bytes);
         Ok(self.new_type_state())
@@ -90,7 +84,7 @@ impl<S: Interaction> Transcript<S, InputPhase> {
 
     pub fn message(self, input: &S::Message) -> Transcript<S, ChallengePhase> {
         self.try_message(input)
-            .expect("input serializes successfully");
+            .expect("input serializes successfully")
     }
 }
 
@@ -110,6 +104,23 @@ impl<S: Interaction> Transcript<S, ChallengePhase> {
             ),
             FromByteRepr::from_bytes(&chall_buf),
         )
+    }
+}
+
+#[derive(Debug, Clone)]
+// From<bcs::Error> intentionally not implemented because the point of this type is to keep
+// bcs::Error out of this crate's public interface
+pub struct SerializationError(bcs::Error);
+
+impl core::fmt::Display for SerializationError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl core::error::Error for SerializationError {
+    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
+        Some(&self.0)
     }
 }
 
@@ -177,6 +188,8 @@ mod test {
     // interface old decree had with incremental initialization, but in a type-safe way;
     #[test]
     fn test_girault() {
+        struct Girault;
+
         #[derive(Serialize)]
         struct GiraultStatement {
             base: BigUint,
@@ -185,11 +198,10 @@ mod test {
         }
 
         #[derive(Serialize)]
-        struct GiraultMessage {
-            commit: BigUint,
-        }
+        struct GiraultMessage(BigUint);
 
         #[derive(Debug, PartialEq)]
+        // In reality you'd probably already have a Field elem type for your field
         struct GiraultChallenge(BigUint);
 
         impl FromByteRepr for GiraultChallenge {
@@ -198,8 +210,6 @@ mod test {
                 GiraultChallenge(BigUint::from_bytes_le(bytes))
             }
         }
-
-        struct Girault;
 
         impl ProtocolStart for Girault {
             const NAME: &str = "Girault";
@@ -218,7 +228,7 @@ mod test {
         ) -> (GiraultMessage, GiraultChallenge, BigUint) {
             let r = rand::thread_rng().gen_biguint(1024);
             let commit = stmt.base.modpow(&r, &stmt.modulus);
-            let message = GiraultMessage { commit };
+            let message = GiraultMessage(commit);
             let (_, chall) = Transcript::<Girault, _>::new("girault", stmt)
                 .message(&message)
                 .challenge();
@@ -232,7 +242,7 @@ mod test {
             challenge: GiraultChallenge,
             z: BigUint,
         ) {
-            assert!(!msg.commit.is_one() && !msg.commit.is_zero());
+            assert!(!msg.0.is_one() && !msg.0.is_zero());
             assert!(!stmt.target.is_one() && !stmt.target.is_zero());
             assert!(!stmt.base.is_one() && !stmt.base.is_zero());
             assert!(!z.is_one() && !z.is_zero());
