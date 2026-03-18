@@ -9,17 +9,6 @@ use tiro::{
 
 use num_bigint::BigUint;
 
-// TODO: consider how a macro might be used to generate this code
-// A full protocol is a "chain" of Interactions (which are linked by Next)
-// (the last interaction has Next = ProtocolEnd, this is just a one-interaction protocol).
-// Interaction::Message must implement Serialize, Interaction::Challenge must implement
-// FromByteRepr
-//
-// The first interaction represents the protocol and also implements ProtocolStart which specifies
-// the name of the protocol and the statement type.
-//
-// Just a type-level label for the Girault protocol
-
 tiro::define_protocol! {
     Girault,
 
