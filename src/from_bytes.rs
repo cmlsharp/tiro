@@ -1,7 +1,10 @@
 use core::ops::Mul;
+pub use hybrid_array::Array;
 pub use hybrid_array::typenum;
-use hybrid_array::{Array, ArrayN, ArraySize};
+use hybrid_array::{ArrayN, ArraySize};
 
+#[cfg(feature = "derive")]
+pub use tiro_derive::FromByteRepr;
 #[cfg(feature = "derive")]
 use tiro_derive::impl_tuple;
 

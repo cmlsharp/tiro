@@ -2,8 +2,9 @@ use proc_macro::TokenStream;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::{format_ident, quote};
 use syn::{
-    parse_macro_input, Data, DeriveInput, Field, Fields, GenericParam, Generics, Ident,
+    Data, DeriveInput, Field, Fields, GenericParam, Generics, Ident,
     WherePredicate,
+    parse_macro_input,
 };
 
 /// Prefix for generated type parameters to avoid collisions
@@ -30,7 +31,10 @@ fn extract_fields<'a>(data: &'a Data, struct_name: &Ident) -> Vec<&'a Field> {
         Data::Struct(s) => match &s.fields {
             Fields::Named(named) => named.named.iter().collect(),
             Fields::Unnamed(unnamed) => unnamed.unnamed.iter().collect(),
-            Fields::Unit => abort!(struct_name, "FromByteRepr cannot be derived for unit structs"),
+            Fields::Unit => abort!(
+                struct_name,
+                "FromByteRepr cannot be derived for unit structs"
+            ),
         },
         _ => abort!(struct_name, "FromByteRepr can only be derived for structs"),
     }
@@ -135,14 +139,16 @@ fn build_impl_generics(
 
     // Add generated type parameters
     for ident in size_idents.iter().chain(sum_idents.iter()) {
-        impl_generics.params.push(GenericParam::Type(syn::TypeParam {
-            attrs: vec![],
-            ident: ident.clone(),
-            colon_token: None,
-            bounds: syn::punctuated::Punctuated::new(),
-            eq_token: None,
-            default: None,
-        }));
+        impl_generics
+            .params
+            .push(GenericParam::Type(syn::TypeParam {
+                attrs: vec![],
+                ident: ident.clone(),
+                colon_token: None,
+                bounds: syn::punctuated::Punctuated::new(),
+                eq_token: None,
+                default: None,
+            }));
     }
 
     // Add where-clause predicates
@@ -375,7 +381,9 @@ pub fn impl_tuple(input: TokenStream) -> TokenStream {
         (start, end, false)
     } else {
         // Single number - generate implementation for just that size
-        let size: usize = input_str.parse().expect("Expected a number or range expression like '3', '2..5', or '2..=5'");
+        let size: usize = input_str
+            .parse()
+            .expect("Expected a number or range expression like '3', '2..5', or '2..=5'");
         (size, size, true)
     };
 
@@ -406,9 +414,7 @@ fn generate_tuple_impl(
     crate_prefix: &proc_macro2::TokenStream,
 ) -> proc_macro2::TokenStream {
     // Generate type parameter identifiers for tuple elements
-    let type_params: Vec<Ident> = (0..tuple_size)
-        .map(|i| format_ident!("T{}", i))
-        .collect();
+    let type_params: Vec<Ident> = (0..tuple_size).map(|i| format_ident!("T{}", i)).collect();
 
     // Generate size and sum identifiers (reusing existing functions)
     let size_idents = generate_size_idents(tuple_size);
@@ -535,7 +541,8 @@ fn generate_tuple_impl(
     };
 
     // Collect all generic parameters: type params + size params + sum params
-    let all_generics = type_params.iter()
+    let all_generics = type_params
+        .iter()
         .chain(size_idents.iter())
         .chain(sum_idents.iter());
 
@@ -552,4 +559,45 @@ fn generate_tuple_impl(
             }
         }
     }
+}
+
+// Protocol macro module
+mod protocol;
+
+/// Define a Fiat-Shamir protocol with multiple interaction rounds.
+///
+/// This macro generates all the necessary boilerplate for defining a protocol,
+/// including struct definitions, protocol markers, and trait implementations.
+///
+/// # Syntax
+///
+/// ```ignore
+/// define_protocol! {
+///     ProtocolName,
+///     statement {
+///         #[derive(Serialize)]
+///         struct StatementType { field: Type }
+///     },
+///     interaction Round1 {
+///         message {
+///             #[derive(Serialize)]
+///             struct Message1(Type);
+///         }
+///         challenge {
+///             #[derive(Debug)]
+///             struct Challenge1(Type);
+///         }
+///     },
+///     interaction Round2 {
+///         message: ExternalMessage,
+///         challenge: ExternalChallenge,
+///     },
+/// }
+/// ```
+#[proc_macro_error]
+#[proc_macro]
+pub fn define_protocol(input: TokenStream) -> TokenStream {
+    let protocol_def = parse_macro_input!(input as protocol::ProtocolDef);
+    let crate_prefix = crate_ident();
+    protocol::generate_protocol_impl(protocol_def, crate_prefix)
 }
